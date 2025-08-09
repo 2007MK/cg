@@ -19,10 +19,16 @@ export function useWebSocket({ gameId, playerId, onMessage }: UseWebSocketProps)
   };
 
   useEffect(() => {
-    if (!gameId || !playerId) return;
+    if (!gameId || !playerId) {
+      console.log('Missing gameId or playerId:', { gameId, playerId });
+      return;
+    }
 
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
     const wsUrl = `${protocol}//${window.location.host}/ws`;
+    
+    console.log('Attempting WebSocket connection to:', wsUrl);
+    console.log('With gameId:', gameId, 'playerId:', playerId);
     
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
@@ -32,15 +38,18 @@ export function useWebSocket({ gameId, playerId, onMessage }: UseWebSocketProps)
       setError(null);
       console.log('WebSocket connected');
       
-      // Join the game immediately when connection opens
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'join',
-          gameId,
-          playerId,
-          data: {},
-        }));
-      }
+      // Small delay to ensure connection is stable before sending join message
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          console.log('Sending join message to server');
+          ws.send(JSON.stringify({
+            type: 'join',
+            gameId,
+            playerId,
+            data: {},
+          }));
+        }
+      }, 100);
     };
 
     ws.onmessage = (event) => {

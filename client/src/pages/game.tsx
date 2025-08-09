@@ -7,6 +7,7 @@ import { GameTable } from '@/components/game/GameTable';
 import { BiddingPanel } from '@/components/game/BiddingPanel';
 import { TeamScores } from '@/components/game/TeamScores';
 import { GameActions } from '@/components/game/GameActions';
+import { Button } from '@/components/ui/button';
 import { Card as CardType, GameMessage } from '@/types/game';
 import { useToast } from '@/hooks/use-toast';
 
@@ -22,8 +23,10 @@ function GameContent() {
   const username = urlParams.get('username');
 
   const handleWebSocketMessage = useCallback((message: GameMessage) => {
+    console.log('Received WebSocket message:', message);
     switch (message.type) {
       case 'game_update':
+        console.log('Processing game update:', message.data);
         dispatch({
           type: 'SET_GAME_STATE',
           payload: {
@@ -34,6 +37,7 @@ function GameContent() {
         
         // Set current player
         const currentUserPlayer = message.data.players.find((p: any) => p.id === playerId);
+        console.log('Found current user player:', currentUserPlayer);
         if (currentUserPlayer) {
           dispatch({
             type: 'SET_CURRENT_PLAYER',
@@ -43,6 +47,7 @@ function GameContent() {
         break;
         
       case 'error':
+        console.error('Game error received:', message.data);
         toast({
           title: "Game Error",
           description: message.data.message,
@@ -59,10 +64,16 @@ function GameContent() {
   });
 
   useEffect(() => {
+    console.log('Connection status changed:', isConnected);
     if (isConnected) {
       dispatch({ type: 'SET_CONNECTION_STATUS', payload: true });
     }
   }, [isConnected, dispatch]);
+
+  // Log current state for debugging
+  useEffect(() => {
+    console.log('Current game state:', { game, players, currentPlayer, isConnected });
+  }, [game, players, currentPlayer, isConnected]);
 
   const handleBid = (amount: number) => {
     sendMessage({
@@ -107,6 +118,20 @@ function GameContent() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
           <div className="text-white">Connecting to game...</div>
+          <div className="text-xs text-gray-400 mt-2">
+            Game ID: {gameId}<br/>
+            Player ID: {playerId}
+          </div>
+          <div className="mt-4">
+            <Button 
+              onClick={() => window.location.reload()} 
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              Retry Connection
+            </Button>
+          </div>
         </div>
       </div>
     );
