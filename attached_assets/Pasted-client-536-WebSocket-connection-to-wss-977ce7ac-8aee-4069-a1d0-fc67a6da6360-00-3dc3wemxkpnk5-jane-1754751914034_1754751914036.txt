@@ -1,0 +1,47 @@
+client:536 WebSocket connection to 'wss://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/?token=qCIg20f-fMTy' failed: Error during WebSocket handshake: Unexpected response code: 400
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) DOMException: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=qCIg20f-fMTy' is invalid.
+    at setupWebSocket (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@vite/client:536:19)
+    at fallback (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@vite/client:509:16)
+    at WebSocket.<anonymous> (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@vite/client:555:7)
+chunk-RPCDYKBN.js?v=9049841f:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+2game.tsx:76 Uncaught ReferenceError: Cannot access 'game' before initialization
+    at GameContent (game.tsx:76:7)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=9049841f:11548:26)
+    at mountIndeterminateComponent (chunk-RPCDYKBN.js?v=9049841f:14926:21)
+    at beginWork (chunk-RPCDYKBN.js?v=9049841f:15914:22)
+    at HTMLUnknownElement.callCallback2 (chunk-RPCDYKBN.js?v=9049841f:3674:22)
+    at Object.invokeGuardedCallbackDev (chunk-RPCDYKBN.js?v=9049841f:3699:24)
+    at invokeGuardedCallback (chunk-RPCDYKBN.js?v=9049841f:3733:39)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=9049841f:19765:15)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=9049841f:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=9049841f:19137:13)
+chunk-RPCDYKBN.js?v=9049841f:14032 The above error occurred in the <GameContent> component:
+
+    at GameContent (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/src/pages/game.tsx:31:22)
+    at GameProvider (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/src/contexts/GameContext.tsx:56:32)
+    at Game
+    at Route (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9049841f:323:16)
+    at Switch (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/wouter.js?v=9049841f:379:17)
+    at Router
+    at Provider (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/chunk-PKXKA5E6.js?v=9049841f:38:15)
+    at TooltipProvider (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=9049841f:53:5)
+    at QueryClientProvider (https://977ce7ac-8aee-4069-a1d0-fc67a6da6360-00-3dc3wemxkpnk5.janeway.replit.dev/@fs/home/runner/workspace/node_modules/.vite/deps/@tanstack_react-query.js?v=9049841f:2805:3)
+    at App
+
+Consider adding an error boundary to your tree to customize error handling behavior.
+Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.
+logCapturedError @ chunk-RPCDYKBN.js?v=9049841f:14032
+Show 1 more frame
+Show less
+chunk-RPCDYKBN.js?v=9049841f:19413 Uncaught ReferenceError: Cannot access 'game' before initialization
+    at GameContent (game.tsx:76:7)
+    at renderWithHooks (chunk-RPCDYKBN.js?v=9049841f:11548:26)
+    at mountIndeterminateComponent (chunk-RPCDYKBN.js?v=9049841f:14926:21)
+    at beginWork (chunk-RPCDYKBN.js?v=9049841f:15914:22)
+    at beginWork$1 (chunk-RPCDYKBN.js?v=9049841f:19753:22)
+    at performUnitOfWork (chunk-RPCDYKBN.js?v=9049841f:19198:20)
+    at workLoopSync (chunk-RPCDYKBN.js?v=9049841f:19137:13)
+    at renderRootSync (chunk-RPCDYKBN.js?v=9049841f:19116:15)
+    at recoverFromConcurrentError (chunk-RPCDYKBN.js?v=9049841f:18736:28)
+    at performConcurrentWorkOnRoot (chunk-RPCDYKBN.js?v=9049841f:18684:30)

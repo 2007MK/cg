@@ -70,11 +70,6 @@ function GameContent() {
     }
   }, [isConnected, dispatch]);
 
-  // Log current state for debugging
-  useEffect(() => {
-    console.log('Current game state:', { game, players, currentPlayer, isConnected });
-  }, [game, players, currentPlayer, isConnected]);
-
   const handleBid = (amount: number) => {
     sendMessage({
       type: 'bid',
@@ -111,6 +106,11 @@ function GameContent() {
   };
 
   const { game, players, currentPlayer } = state;
+  
+  // Log current state for debugging
+  useEffect(() => {
+    console.log('Current game state:', { game, players, currentPlayer, isConnected });
+  }, [game, players, currentPlayer, isConnected]);
   
   if (!isConnected) {
     return (
