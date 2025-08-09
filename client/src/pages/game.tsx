@@ -68,8 +68,8 @@ function GameContent() {
     sendMessage({
       type: 'bid',
       data: { amount },
-      playerId,
-      gameId,
+      playerId: playerId || undefined,
+      gameId: gameId || undefined,
     });
   };
 
@@ -85,8 +85,8 @@ function GameContent() {
     sendMessage({
       type: 'play_card',
       data: { card },
-      playerId,
-      gameId,
+      playerId: playerId || undefined,
+      gameId: gameId || undefined,
     });
   };
 
@@ -94,8 +94,8 @@ function GameContent() {
     sendMessage({
       type: 'reveal_trump',
       data: {},
-      playerId,
-      gameId,
+      playerId: playerId || undefined,
+      gameId: gameId || undefined,
     });
   };
 

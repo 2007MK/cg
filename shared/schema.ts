@@ -13,6 +13,7 @@ export const games = pgTable("games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   status: text("status").notNull().default("waiting"), // waiting, bidding, playing, completed
   phase: text("phase").notNull().default("bidding"), // bidding, playing
+  variant: text("variant").notNull().default("single_sar"), // single_sar, double_sar, hidden_trump
   currentRound: integer("current_round").notNull().default(1),
   currentPlayer: integer("current_player").notNull().default(0),
   trumpSuit: text("trump_suit"), // hearts, diamonds, clubs, spades
@@ -69,3 +70,35 @@ export interface GameMessage {
   playerId?: string;
   gameId?: string;
 }
+
+export type GameVariant = "single_sar" | "double_sar" | "hidden_trump";
+
+export const GAME_VARIANTS = {
+  single_sar: {
+    name: "Single Sar",
+    description: "Basic Court Piece rules. Win tricks by playing the highest card.",
+    rules: [
+      "Player calls trump suit openly",
+      "Highest card wins the trick",
+      "First team to 7+ tricks wins"
+    ]
+  },
+  double_sar: {
+    name: "Double Sar", 
+    description: "Win 2 consecutive tricks to collect cards from the table.",
+    rules: [
+      "Must win 2 consecutive tricks to collect cards",
+      "Single tricks don't count until consecutive wins",
+      "More strategic gameplay required"
+    ]
+  },
+  hidden_trump: {
+    name: "Hidden Trump",
+    description: "Trump card remains face down until revealed strategically.",
+    rules: [
+      "Trump card is placed face down",
+      "Revealed when player can't follow suit",
+      "Adds mystery and strategy to gameplay"
+    ]
+  }
+} as const;

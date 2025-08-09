@@ -54,6 +54,17 @@ export class MemStorage implements IStorage {
   async createGame(insertGame: InsertGame): Promise<Game> {
     const id = randomUUID();
     const game: Game = {
+      status: "waiting",
+      phase: "bidding",
+      variant: "single_sar",
+      currentRound: 1,
+      currentPlayer: 0,
+      trumpSuit: null,
+      trumpRevealed: false,
+      trumpCard: null,
+      highestBid: null,
+      biddingPlayer: null,
+      gameState: {},
       ...insertGame,
       id,
       createdAt: new Date(),
@@ -83,7 +94,15 @@ export class MemStorage implements IStorage {
 
   async createPlayer(insertPlayer: InsertPlayer): Promise<Player> {
     const id = randomUUID();
-    const player: Player = { ...insertPlayer, id };
+    const player: Player = { 
+      userId: null,
+      hand: [],
+      bid: null,
+      tricks: 0,
+      isConnected: false,
+      ...insertPlayer, 
+      id 
+    };
     this.players.set(id, player);
     return player;
   }

@@ -30,37 +30,45 @@ export function useWebSocket({ gameId, playerId, onMessage }: UseWebSocketProps)
     ws.onopen = () => {
       setIsConnected(true);
       setError(null);
+      console.log('WebSocket connected');
       
-      // Join the game
-      sendMessage({
-        type: 'join',
-        gameId,
-        playerId,
-        data: {},
-      });
+      // Join the game immediately when connection opens
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'join',
+          gameId,
+          playerId,
+          data: {},
+        }));
+      }
     };
 
     ws.onmessage = (event) => {
       try {
         const message: GameMessage = JSON.parse(event.data);
+        console.log('WebSocket message received:', message);
         onMessage?.(message);
       } catch (err) {
         console.error('Failed to parse WebSocket message:', err);
       }
     };
 
-    ws.onerror = () => {
+    ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
       setError('WebSocket connection error');
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
+      console.log('WebSocket closed:', event.code, event.reason);
       setIsConnected(false);
     };
 
     return () => {
-      ws.close();
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
-  }, [gameId, playerId, onMessage]);
+  }, [gameId, playerId]);
 
   return {
     isConnected,

@@ -31,9 +31,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create a new game
   app.post("/api/games", async (req, res) => {
     try {
+      const { variant = "single_sar" } = req.body;
+      
       const game = await storage.createGame({
         status: "waiting",
         phase: "bidding",
+        variant,
         currentRound: 1,
         currentPlayer: 0,
         trumpRevealed: false,
@@ -135,11 +138,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // WebSocket connection handling
   wss.on('connection', (ws, req) => {
+    console.log('New WebSocket connection established');
     let connection: GameConnection | null = null;
     
     ws.on('message', async (data) => {
       try {
         const message: GameMessage = JSON.parse(data.toString());
+        console.log('WebSocket message received:', message.type, message.gameId, message.playerId);
         
         switch (message.type) {
           case 'join':
@@ -162,10 +167,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               const game = await storage.getGame(message.gameId);
               const players = await storage.getPlayersByGame(message.gameId);
               
-              ws.send(JSON.stringify({
+              const response = {
                 type: 'game_update',
                 data: { game, players },
-              }));
+              };
+              console.log('Sending game update to player:', message.playerId);
+              ws.send(JSON.stringify(response));
             }
             break;
             
@@ -188,6 +195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
         }
       } catch (error) {
+        console.error('WebSocket message error:', error);
         ws.send(JSON.stringify({
           type: 'error',
           data: { message: 'Invalid message format' },
@@ -236,7 +244,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Check if bidding should end (3 consecutive passes - simplified for now)
     // For now, after everyone bids once, end bidding and deal remaining cards
     const updatedPlayers = await storage.getPlayersByGame(connection.gameId);
-    const playersWithBids = updatedPlayers.filter(p => p.bid > 0);
+    const playersWithBids = updatedPlayers.filter(p => p.bid && p.bid > 0);
     
     if (playersWithBids.length === 4) {
       // End bidding, deal remaining cards

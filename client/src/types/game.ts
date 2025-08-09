@@ -17,10 +17,13 @@ export interface Player {
   name?: string;
 }
 
+export type GameVariant = "single_sar" | "double_sar" | "hidden_trump";
+
 export interface Game {
   id: string;
   status: "waiting" | "bidding" | "playing" | "completed";
   phase: "bidding" | "playing";
+  variant: GameVariant;
   currentRound: number;
   currentPlayer: number;
   trumpSuit?: "hearts" | "diamonds" | "clubs" | "spades";

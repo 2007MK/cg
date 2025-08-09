@@ -16,7 +16,9 @@ export function GameHeader() {
       <div className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-4">
           <h1 className="text-2xl font-bold text-yellow-400">Court Piece</h1>
-          <span className="text-sm bg-gray-700 px-2 py-1 rounded">Single Sar</span>
+          <span className="text-sm bg-gray-700 px-2 py-1 rounded capitalize">
+            {game?.variant?.replace('_', ' ') || 'Single Sar'}
+          </span>
         </div>
         <div className="flex items-center space-x-6">
           <div className="text-sm">

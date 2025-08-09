@@ -2,14 +2,17 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLocation } from 'wouter';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { GameVariant, GAME_VARIANTS } from '@shared/schema';
 
 export default function Lobby() {
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState('');
   const [gameId, setGameId] = useState('');
+  const [selectedVariant, setSelectedVariant] = useState<GameVariant>('single_sar');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const { toast } = useToast();
@@ -26,7 +29,9 @@ export default function Lobby() {
 
     setIsCreating(true);
     try {
-      const response = await apiRequest('POST', '/api/games');
+      const response = await apiRequest('POST', '/api/games', {
+        variant: selectedVariant,
+      });
       const game = await response.json();
       
       // Join the created game
@@ -69,7 +74,14 @@ export default function Lobby() {
         username: username.trim(),
       });
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to join game');
+      }
+      
       const { player, game } = await response.json();
+      
+      console.log('Successfully joined game:', { gameId: game.id, playerId: player.id });
       
       // Navigate to game with player ID
       setLocation(`/game/${game.id}?playerId=${player.id}&username=${username}`);
@@ -89,7 +101,7 @@ export default function Lobby() {
       <div className="w-full max-w-md space-y-6">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-yellow-400 mb-2">Court Piece</h1>
-          <p className="text-gray-400">Single Sar Variation</p>
+          <p className="text-gray-400">Traditional Pakistani Card Game</p>
         </div>
 
         <Card className="bg-gray-800 border-gray-700">
@@ -108,13 +120,49 @@ export default function Lobby() {
               />
             </div>
 
+            <div>
+              <label className="text-sm text-gray-400 mb-1 block">Game Variant</label>
+              <Select value={selectedVariant} onValueChange={(value: GameVariant) => setSelectedVariant(value)}>
+                <SelectTrigger className="bg-gray-700 border-gray-600 text-white">
+                  <SelectValue placeholder="Select game variant" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(GAME_VARIANTS).map(([key, variant]) => (
+                    <SelectItem key={key} value={key}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{variant.name}</span>
+                        <span className="text-xs text-gray-400">{variant.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Game variant details */}
+            {selectedVariant && (
+              <div className="bg-gray-700 rounded p-3 text-sm">
+                <div className="font-semibold text-yellow-400 mb-2">
+                  {GAME_VARIANTS[selectedVariant].name} Rules:
+                </div>
+                <ul className="space-y-1 text-gray-300">
+                  {GAME_VARIANTS[selectedVariant].rules.map((rule, index) => (
+                    <li key={index} className="flex items-start">
+                      <span className="text-yellow-400 mr-2">•</span>
+                      {rule}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
             <div className="space-y-3">
               <Button
                 onClick={handleCreateGame}
                 disabled={isCreating || isJoining}
                 className="w-full bg-green-600 hover:bg-green-700"
               >
-                {isCreating ? 'Creating...' : 'Create New Game'}
+                {isCreating ? 'Creating...' : `Create ${GAME_VARIANTS[selectedVariant].name} Game`}
               </Button>
 
               <div className="relative">

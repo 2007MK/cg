@@ -54,7 +54,7 @@ export function GameActions({ onRevealTrump, canRevealTrump }: GameActionsProps)
         </div>
         
         <div className="text-xs text-gray-400 text-center">
-          Single Sar Variation
+          {game?.variant?.replace('_', ' ')?.replace(/\b\w/g, l => l.toUpperCase()) || 'Single Sar'} Variation
         </div>
       </div>
     </div>
