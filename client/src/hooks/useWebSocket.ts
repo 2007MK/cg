@@ -56,6 +56,12 @@ export function useWebSocket({ gameId, playerId, onMessage }: UseWebSocketProps)
       try {
         const message: GameMessage = JSON.parse(event.data);
         console.log('WebSocket message received:', message);
+        
+        // Ensure we're properly connected when receiving game updates
+        if (message.type === 'game_update' && !isConnected) {
+          setIsConnected(true);
+        }
+        
         onMessage?.(message);
       } catch (err) {
         console.error('Failed to parse WebSocket message:', err);

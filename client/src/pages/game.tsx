@@ -27,6 +27,10 @@ function GameContent() {
     switch (message.type) {
       case 'game_update':
         console.log('Processing game update:', message.data);
+        
+        // Set connection status when we receive game data
+        dispatch({ type: 'SET_CONNECTION_STATUS', payload: true });
+        
         dispatch({
           type: 'SET_GAME_STATE',
           payload: {
@@ -142,6 +146,11 @@ function GameContent() {
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="text-white">Loading game state...</div>
+          <div className="text-xs text-gray-400 mt-2">
+            Connected: {isConnected ? 'Yes' : 'No'}<br/>
+            Game: {game ? 'Loaded' : 'Loading'}<br/>
+            Player: {currentPlayer ? 'Found' : 'Loading'}
+          </div>
         </div>
       </div>
     );
