@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +12,15 @@ export default function Lobby() {
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState('');
   const [gameId, setGameId] = useState('');
+  
+  // Check if there's a join parameter in the URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const joinGameId = urlParams.get('join');
+    if (joinGameId) {
+      setGameId(joinGameId);
+    }
+  }, []);
   const [selectedVariant, setSelectedVariant] = useState<GameVariant>('single_sar');
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
