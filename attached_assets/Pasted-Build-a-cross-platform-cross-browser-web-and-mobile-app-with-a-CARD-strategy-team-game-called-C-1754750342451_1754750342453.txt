@@ -1,0 +1,37 @@
+Build a cross-platform, cross-browser, web and mobile app with a CARD strategy team game called - 'Court Piece'
+
+Variations of the game - 1.Single Sar 2. Double Sar and 3. Hidden trump. 
+
+Single sar is an easy variant, it follows the basic rules of rung, a player decides and calls the trump suit/rung and cards are picked up by the most senior ranked card player, one with the highest card in the trick. The game is played until a team wins a minimum of 7 or more tricks. 
+
+In Double sar tricks are not automatically collected by the winner as in Single sar variation instead a player needs to win 2 consecutive tricks to collect the cards. 
+
+Hidden trump or Hidden rung is like double sar but it features a hidden card, the trump caller keeps the trump card turned face down. The trump card is not revealed until the declarer or one of the other players requests for the card to be revealed.
+
+Game brief : 'hidden trump' game or 'Dabba Rang' is a complex, logical and interesting game of the rung. Unlike 'khula rung' (open rung), each player announces the number of 'sars' (rounds) he would pick or win, the trump or 'rung' suit is not revealed rather a card from that suit is placed face down by the player who bids the highest number of sars, the rest of the game is the same except no one wins a sar or round unless the trump suit is revealed by the elimination of a suit from the other team's hand and their insisting upon that they want to 'kat lagana' or cut the ongoing round and thus must know the trump suit. Thus the primary objective of the other team is to reveal the trump suit asap and that of the bidding team is to keep it concealed. If the number of sars previously declared is picked up, the game is won.
+
+1. Card deck - 52 card deck, 
+
+2. Card rank descending A K Q J 10 9 8 7 6 5 4 3 2
+
+
+3. Teams - The 4 players are split into 2 teams of 2. team mates are positioned opposite to each other on the table. alternatively 1 & 3, 2 & 4 position on the table. 
+
+4. Toss - One random card each are picked by the players. The player with the highest ranked card will get the first chance to bid and the player on his right will deal the cards to start the game. The dealer of the cards is the same until the dealers team wins a game. If the first player who bid loses, than he becomes the dealer and the person to his left gets the chance to bid first and so on.
+
+5. Bidding phase - After receiving the first 5 cards, players can bid minimum 9 rounds /maximum 13 rounds, and bid in turns around the table. Bidding continues until any 3 players stop bidding further. The player with the highest bid decides the trump suit (rung) and the trump card is kept face down on the table until the trump is revealed. After the bidding, 8 more cards each are distributed to the players.
+
+5. Gameplay mechanics -  
+After receiving the first 5 cards one of the player decides the trump suit (rung) and the trump caller leads the first trick. The rest of the players have to follow the suit, all 4 players play one card each in clockwise order. if they don't have a particular suit they can throw another card, the player with the highest card wins the trick and leads the next round but the round are not won until the trump is revealed.
+
+6. Trump revealation - the opposing team can call the trump suit if they do not have any card of the suit in play
+ or the bidding team can reveal the trump if they want, when they do not have the suit in play. After the trump is revealed, the trump card comes in play for the bidder.
+
+7. Scoring - after the trump is revealed, trump always beats non-trump cards and the highest ranked card wins the round, two continuous rounds have to be won by a team to collect all the rounds played before the trump was revealed on the table. the bidding team should collect the number of rounds they bid initially, every two continuous rounds won will get the team the round of cards on the table which has been played, if the game continues till the last round that is the 13th round, single sar or single round win is enough to win the round. The team which bids will collect the points equal to the bid and the opposite team gets no points. If the bidding team is unable to win the game which they bid, double the points are deducted from the total points of the bidding team. If the points of any team goes below zero, the other team starts to accumulate the points. The team which first reaches 52 points wins the match. 
+
+
+
+
+
+
+
