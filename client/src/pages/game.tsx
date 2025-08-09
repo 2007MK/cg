@@ -17,13 +17,13 @@ function GameContent() {
   const { state, dispatch } = useGameContext();
   const { toast } = useToast();
 
-  // Extract playerId and username from URL params
-  const urlParams = new URLSearchParams(location.split('?')[1] || '');
+  // Extract playerId and username from URL params using window.location
+  const urlParams = new URLSearchParams(window.location.search);
   const playerId = urlParams.get('playerId');
   const username = urlParams.get('username');
   
   console.log('Game page params:', { gameId, playerId, username, location });
-  console.log('URL search params:', location.split('?')[1] || 'none');
+  console.log('Window location search:', window.location.search);
   console.log('All URL params:', Object.fromEntries(urlParams.entries()));
 
   const handleWebSocketMessage = useCallback((message: GameMessage) => {
