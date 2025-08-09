@@ -23,6 +23,8 @@ function GameContent() {
   const username = urlParams.get('username');
   
   console.log('Game page params:', { gameId, playerId, username, location });
+  console.log('URL search params:', location.split('?')[1] || 'none');
+  console.log('All URL params:', Object.fromEntries(urlParams.entries()));
 
   const handleWebSocketMessage = useCallback((message: GameMessage) => {
     console.log('Received WebSocket message:', message);

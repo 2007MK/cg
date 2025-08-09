@@ -82,6 +82,7 @@ export default function Lobby() {
       const { player, game } = await response.json();
       
       console.log('Successfully joined game:', { gameId: game.id, playerId: player.id });
+      console.log('Navigation URL:', `/game/${game.id}?playerId=${player.id}&username=${username}`);
       
       // Navigate to game with player ID
       setLocation(`/game/${game.id}?playerId=${player.id}&username=${username}`);

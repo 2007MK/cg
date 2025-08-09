@@ -20,7 +20,7 @@ export function useWebSocket({ gameId, playerId, onMessage }: UseWebSocketProps)
 
   useEffect(() => {
     if (!gameId || !playerId) {
-      console.log('Missing gameId or playerId:', { gameId, playerId });
+      console.log('Missing gameId or playerId:', { gameId, playerId, gameIdType: typeof gameId, playerIdType: typeof playerId });
       return;
     }
 
