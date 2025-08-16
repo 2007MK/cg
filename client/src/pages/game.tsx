@@ -88,10 +88,11 @@ function GameContent() {
   };
 
   const handlePass = () => {
-    // For now, just send a bid of 0 to indicate pass
-    toast({
-      title: "Pass",
-      description: "You passed this bidding round",
+    sendMessage({
+      type: 'pass',
+      data: {},
+      playerId: playerId || undefined,
+      gameId: gameId || undefined,
     });
   };
 

@@ -82,7 +82,7 @@ export function PlayerArea({
                 key={index}
                 card={card}
                 isHidden={!isCurrentUser}
-                size="sm"
+                size={isCurrentUser ? "md" : "sm"}
                 rotation={getCardRotation()}
                 isPlayable={isCurrentUser && isCurrentTurn}
                 onClick={() => isCurrentUser && isCurrentTurn && onCardPlay?.(card)}
@@ -93,17 +93,16 @@ export function PlayerArea({
         
         <div className={cn(
           getPlayerInfoClasses(),
-          isCurrentTurn && 'ring-2 ring-blue-400'
+          isCurrentTurn && 'ring-2 ring-yellow-400 ring-opacity-75'
         )}>
           <div className={cn('text-sm font-semibold', teamColor)}>
-            {isCurrentUser ? 'You' : `Player ${player.playerNumber + 1}`}
-            {player.name && ` (${player.name})`}
+            {isCurrentUser ? 'You' : (player.username || `Player ${player.playerNumber + 1}`)}
           </div>
           <div className="text-xs text-gray-400">Team {player.team}</div>
           <div className="text-xs">
-            <span>Bid: {player.bid}</span>
+            <span>Bid: {player.bid || 0}</span>
             {' | '}
-            <span>Tricks: {player.tricks}</span>
+            <span>Tricks: {player.tricks || 0}</span>
           </div>
           {!player.isConnected && (
             <div className="text-xs text-red-400">Disconnected</div>
@@ -117,7 +116,7 @@ export function PlayerArea({
                 key={index}
                 card={card}
                 isHidden={!isCurrentUser}
-                size="sm"
+                size={isCurrentUser ? "md" : "sm"}
                 rotation={getCardRotation()}
                 isPlayable={isCurrentUser && isCurrentTurn}
                 onClick={() => isCurrentUser && isCurrentTurn && onCardPlay?.(card)}

@@ -26,9 +26,9 @@ const suitColors = {
 };
 
 const cardSizes = {
-  sm: 'w-8 h-11',
-  md: 'w-12 h-16',
-  lg: 'w-16 h-22',
+  sm: 'w-10 h-14',
+  md: 'w-14 h-20',
+  lg: 'w-20 h-28',
 };
 
 export function Card({ 

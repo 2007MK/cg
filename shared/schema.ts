@@ -65,7 +65,7 @@ export interface Card {
 }
 
 export interface GameMessage {
-  type: "join" | "bid" | "play_card" | "reveal_trump" | "game_update" | "error";
+  type: "join" | "bid" | "pass" | "play_card" | "reveal_trump" | "game_update" | "error";
   data: any;
   playerId?: string;
   gameId?: string;

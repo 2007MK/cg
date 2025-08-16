@@ -36,8 +36,7 @@ export function BiddingPanel({ onBid, onPass, isMyTurn }: BiddingPanelProps) {
         <div className="text-sm">
           <span className="text-gray-400">Current Highest Bid:</span>
           <span className="text-white font-semibold ml-2">
-            {game?.highestBid || 0}
-            {game?.biddingPlayer !== undefined && ` (Player ${game.biddingPlayer + 1})`}
+            {game?.highestBid || 0} tricks
           </span>
         </div>
         

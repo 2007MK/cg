@@ -60,7 +60,7 @@ export function GameTable({ onCardPlay }: GameTableProps) {
       <CenterPlayArea 
         game={game}
         currentTrick={currentTrick}
-        currentPlayerName={currentTurnPlayer ? `Player ${currentTurnPlayer.playerNumber + 1}` : undefined}
+        currentPlayerName={currentTurnPlayer ? (currentTurnPlayer.username || `Player ${currentTurnPlayer.playerNumber + 1}`) : undefined}
       />
     </div>
   );

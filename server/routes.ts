@@ -163,13 +163,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Update player connection status
               await storage.updatePlayer(message.playerId, { isConnected: true });
               
-              // Send current game state
+              // Send current game state with usernames
               const game = await storage.getGame(message.gameId);
               const players = await storage.getPlayersByGame(message.gameId);
               
+              // Enrich players with usernames
+              const enrichedPlayers = await Promise.all(
+                players.map(async (player) => {
+                  const user = player.userId ? await storage.getUser(player.userId) : null;
+                  return {
+                    ...player,
+                    username: user?.username || `Player ${player.playerNumber + 1}`,
+                  };
+                })
+              );
+              
               const response = {
                 type: 'game_update',
-                data: { game, players },
+                data: { game, players: enrichedPlayers },
               };
               console.log('Sending game update to player:', message.playerId);
               ws.send(JSON.stringify(response));
@@ -179,6 +190,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case 'bid':
             if (connection) {
               await handleBid(connection, message.data);
+            }
+            break;
+            
+          case 'pass':
+            if (connection) {
+              await handlePass(connection);
             }
             break;
             
@@ -223,11 +240,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     if (!game || !player || game.phase !== 'bidding') return;
     
-    // Validate bid
-    if (bidData.amount < 9 || bidData.amount > 13 || bidData.amount <= game.highestBid!) {
+    // Validate bid - minimum 9, maximum 13, must be higher than current highest
+    const currentHighest = game.highestBid || 8;
+    if (bidData.amount < 9 || bidData.amount > 13 || bidData.amount <= currentHighest) {
       connection.ws.send(JSON.stringify({
         type: 'error',
-        data: { message: 'Invalid bid amount' },
+        data: { message: `Bid must be between ${currentHighest + 1} and 13 tricks` },
+      }));
+      return;
+    }
+    
+    // Validate it's player's turn to bid
+    if (game.currentPlayer !== player.playerNumber) {
+      connection.ws.send(JSON.stringify({
+        type: 'error',
+        data: { message: 'Not your turn to bid' },
       }));
       return;
     }
@@ -235,51 +262,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Update player bid
     await storage.updatePlayer(connection.playerId, { bid: bidData.amount });
     
-    // Update game with highest bid
+    // Update game with highest bid and move to next player
+    const nextPlayer = (game.currentPlayer + 1) % 4;
     await storage.updateGame(connection.gameId, {
       highestBid: bidData.amount,
       biddingPlayer: player.playerNumber,
+      currentPlayer: nextPlayer,
     });
     
-    // Check if bidding should end (3 consecutive passes - simplified for now)
-    // For now, after everyone bids once, end bidding and deal remaining cards
+    // Store bidding history
+    const gameState = game.gameState as any;
+    if (!gameState.biddingHistory) gameState.biddingHistory = [];
+    gameState.biddingHistory.push({
+      player: player.playerNumber,
+      bid: bidData.amount,
+      action: 'bid',
+    });
+    
+    await storage.updateGame(connection.gameId, { gameState });
+    
+    // Check if bidding should end (simplified: after 4 bids or 3 consecutive passes)
     const updatedPlayers = await storage.getPlayersByGame(connection.gameId);
     const playersWithBids = updatedPlayers.filter(p => p.bid && p.bid > 0);
     
-    if (playersWithBids.length === 4) {
-      // End bidding, deal remaining cards
-      const gameState = game.gameState as any;
-      const remainingDeck = gameState.deck || [];
-      const currentHands = updatedPlayers.map(p => p.hand as Card[]);
-      
-      const finalHands = dealRemainingCards(remainingDeck, currentHands);
-      
-      for (let i = 0; i < updatedPlayers.length; i++) {
-        await storage.updatePlayer(updatedPlayers[i].id, {
-          hand: finalHands[i],
-        });
-      }
-      
-      // Set trump suit and card
-      const trumpSuits = ["hearts", "diamonds", "clubs", "spades"];
-      const trumpSuit = trumpSuits[Math.floor(Math.random() * 4)];
-      const trumpCard = { suit: trumpSuit, rank: "A", value: 14 }; // Simplified
-      
-      await storage.updateGame(connection.gameId, {
-        phase: 'playing',
-        trumpSuit,
-        trumpCard,
-        currentPlayer: game.biddingPlayer || 0,
-      });
+    if (playersWithBids.length >= 4 || gameState.biddingHistory.length >= 8) {
+      // End bidding phase, deal remaining cards
+      await endBiddingPhase(connection.gameId);
     }
     
-    // Broadcast update
+    // Broadcast update with usernames
     const updatedGame = await storage.getGame(connection.gameId);
     const updatedGamePlayers = await storage.getPlayersByGame(connection.gameId);
     
+    // Enrich players with usernames
+    const enrichedPlayers = await Promise.all(
+      updatedGamePlayers.map(async (player) => {
+        const user = player.userId ? await storage.getUser(player.userId) : null;
+        return {
+          ...player,
+          username: user?.username || `Player ${player.playerNumber + 1}`,
+        };
+      })
+    );
+    
     broadcastToGame(connection.gameId, {
       type: 'game_update',
-      data: { game: updatedGame, players: updatedGamePlayers },
+      data: { game: updatedGame, players: enrichedPlayers },
     });
   }
   
@@ -338,13 +366,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await resolveTrick(connection.gameId);
     }
     
-    // Broadcast update
+    // Broadcast update with usernames
     const updatedGame = await storage.getGame(connection.gameId);
     const updatedPlayers = await storage.getPlayersByGame(connection.gameId);
     
+    // Enrich players with usernames
+    const enrichedPlayers = await Promise.all(
+      updatedPlayers.map(async (player) => {
+        const user = player.userId ? await storage.getUser(player.userId) : null;
+        return {
+          ...player,
+          username: user?.username || `Player ${player.playerNumber + 1}`,
+        };
+      })
+    );
+    
     broadcastToGame(connection.gameId, {
       type: 'game_update',
-      data: { game: updatedGame, players: updatedPlayers },
+      data: { game: updatedGame, players: enrichedPlayers },
     });
   }
   
@@ -357,13 +396,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       trumpRevealed: true,
     });
     
-    // Broadcast update
+    // Broadcast update with usernames
     const updatedGame = await storage.getGame(connection.gameId);
     const players = await storage.getPlayersByGame(connection.gameId);
     
+    // Enrich players with usernames
+    const enrichedPlayers = await Promise.all(
+      players.map(async (player) => {
+        const user = player.userId ? await storage.getUser(player.userId) : null;
+        return {
+          ...player,
+          username: user?.username || `Player ${player.playerNumber + 1}`,
+        };
+      })
+    );
+    
     broadcastToGame(connection.gameId, {
       type: 'game_update',
-      data: { game: updatedGame, players },
+      data: { game: updatedGame, players: enrichedPlayers },
     });
   }
   
@@ -374,28 +424,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const gameState = game.gameState as any;
     const trick = gameState.currentTrick;
     
-    // Determine winner (simplified logic)
+    if (!trick || trick.length !== 4) return;
+    
+    // Determine winner based on Court Piece rules
     let winner = trick[0];
+    const leadSuit = winner.card.suit;
+    
     for (let i = 1; i < trick.length; i++) {
       const card = trick[i].card;
       const winnerCard = winner.card;
       
-      // Trump cards win
+      // Trump cards always win over non-trump
       if (game.trumpRevealed && card.suit === game.trumpSuit && winnerCard.suit !== game.trumpSuit) {
         winner = trick[i];
       } else if (game.trumpRevealed && winnerCard.suit === game.trumpSuit && card.suit !== game.trumpSuit) {
-        // Winner stays the same
-      } else if (card.suit === winnerCard.suit && card.value > winnerCard.value) {
+        // Winner stays trump
+        continue;
+      } else if (game.trumpRevealed && card.suit === game.trumpSuit && winnerCard.suit === game.trumpSuit) {
+        // Both trump, higher value wins
+        if (card.value > winnerCard.value) {
+          winner = trick[i];
+        }
+      } else if (card.suit === leadSuit && winnerCard.suit === leadSuit) {
+        // Both follow suit, higher value wins
+        if (card.value > winnerCard.value) {
+          winner = trick[i];
+        }
+      } else if (card.suit === leadSuit && winnerCard.suit !== leadSuit && winnerCard.suit !== game.trumpSuit) {
+        // Card follows suit, winner doesn't
         winner = trick[i];
       }
     }
     
     // Update winner's tricks
     const winnerPlayer = await storage.getPlayer(winner.playerId);
+    const players = await storage.getPlayersByGame(gameId);
+    
     if (winnerPlayer) {
+      const newTricks = winnerPlayer.tricks + 1;
       await storage.updatePlayer(winner.playerId, {
-        tricks: winnerPlayer.tricks + 1,
+        tricks: newTricks,
       });
+      
+      // Handle consecutive wins for Double Sar and Hidden Trump variants
+      if (game.variant === 'double_sar' || game.variant === 'hidden_trump') {
+        const team = winnerPlayer.team;
+        const previousWinner = gameState.lastTrickWinner;
+        
+        if (previousWinner && previousWinner.team === team) {
+          // Consecutive win - collect all pending tricks
+          gameState.consecutiveWins[team]++;
+          if (gameState.consecutiveWins[team] >= 2) {
+            // Collect all tricks from the table
+            gameState.tricksWon = gameState.tricksWon || [];
+            gameState.tricksWon.push(...gameState.pendingTricks || []);
+            gameState.pendingTricks = [];
+            gameState.consecutiveWins[team] = 0;
+          }
+        } else {
+          // Reset consecutive wins for other team
+          gameState.consecutiveWins[team === 'A' ? 'B' : 'A'] = 0;
+          gameState.consecutiveWins[team] = 1;
+        }
+        
+        gameState.lastTrickWinner = { team, player: winner.playerNumber };
+        
+        // Store current trick as pending
+        if (!gameState.pendingTricks) gameState.pendingTricks = [];
+        gameState.pendingTricks.push(trick);
+      }
     }
     
     // Clear current trick and set next leader
@@ -407,17 +504,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
       gameState,
     });
     
-    // Check for game end
-    const players = await storage.getPlayersByGame(gameId);
-    const teamATricks = players.filter(p => p.team === "A").reduce((sum, p) => sum + p.tricks, 0);
-    const teamBTricks = players.filter(p => p.team === "B").reduce((sum, p) => sum + p.tricks, 0);
+    // Check for game end conditions
+    const updatedPlayers = await storage.getPlayersByGame(gameId);
+    const teamATricks = updatedPlayers.filter(p => p.team === "A").reduce((sum, p) => sum + p.tricks, 0);
+    const teamBTricks = updatedPlayers.filter(p => p.team === "B").reduce((sum, p) => sum + p.tricks, 0);
     
-    if (teamATricks >= 7 || teamBTricks >= 7 || game.currentRound >= 13) {
+    // Check win conditions based on variant
+    let gameEnded = false;
+    if (game.variant === 'single_sar') {
+      gameEnded = teamATricks >= 7 || teamBTricks >= 7;
+    } else {
+      // For double sar and hidden trump, check collected tricks
+      const teamACollected = gameState.tricksWon?.filter((t: any) => t.winner?.team === 'A').length || 0;
+      const teamBCollected = gameState.tricksWon?.filter((t: any) => t.winner?.team === 'B').length || 0;
+      gameEnded = teamACollected >= 7 || teamBCollected >= 7 || game.currentRound >= 13;
+    }
+    
+    if (gameEnded) {
+      // Determine winner and update game state
+      const winningTeam = teamATricks > teamBTricks ? 'A' : 'B';
+      const bidSuccessful = game.biddingPlayer !== null && 
+        updatedPlayers.find(p => p.playerNumber === game.biddingPlayer)?.team === winningTeam &&
+        (winningTeam === 'A' ? teamATricks : teamBTricks) >= (game.highestBid || 0);
+      
       await storage.updateGame(gameId, {
         status: "completed",
         phase: "completed",
+        gameState: {
+          ...gameState,
+          winner: winningTeam,
+          bidSuccessful,
+          finalScores: { A: teamATricks, B: teamBTricks },
+        },
       });
     }
+  }
+
+  async function handlePass(connection: GameConnection) {
+    const game = await storage.getGame(connection.gameId);
+    const player = await storage.getPlayer(connection.playerId);
+    
+    if (!game || !player || game.phase !== 'bidding') return;
+    
+    // Validate it's player's turn to bid
+    if (game.currentPlayer !== player.playerNumber) {
+      connection.ws.send(JSON.stringify({
+        type: 'error',
+        data: { message: 'Not your turn to bid' },
+      }));
+      return;
+    }
+    
+    // Store pass in bidding history
+    const gameState = game.gameState as any;
+    if (!gameState.biddingHistory) gameState.biddingHistory = [];
+    gameState.biddingHistory.push({
+      player: player.playerNumber,
+      action: 'pass',
+    });
+    
+    // Move to next player
+    const nextPlayer = (game.currentPlayer + 1) % 4;
+    await storage.updateGame(connection.gameId, {
+      currentPlayer: nextPlayer,
+      gameState,
+    });
+    
+    // Check if bidding should end (3 consecutive passes after at least one bid)
+    const recentHistory = gameState.biddingHistory.slice(-3);
+    const allRecentPasses = recentHistory.length === 3 && recentHistory.every((h: any) => h.action === 'pass');
+    const hasBids = gameState.biddingHistory.some((h: any) => h.action === 'bid');
+    
+    if (allRecentPasses && hasBids) {
+      // End bidding phase
+      await endBiddingPhase(connection.gameId);
+    } else {
+      // Broadcast update with usernames
+      const updatedGame = await storage.getGame(connection.gameId);
+      const players = await storage.getPlayersByGame(connection.gameId);
+      
+      const enrichedPlayers = await Promise.all(
+        players.map(async (player) => {
+          const user = player.userId ? await storage.getUser(player.userId) : null;
+          return {
+            ...player,
+            username: user?.username || `Player ${player.playerNumber + 1}`,
+          };
+        })
+      );
+      
+      broadcastToGame(connection.gameId, {
+        type: 'game_update',
+        data: { game: updatedGame, players: enrichedPlayers },
+      });
+    }
+  }
+
+  async function endBiddingPhase(gameId: string) {
+    const game = await storage.getGame(gameId);
+    const players = await storage.getPlayersByGame(gameId);
+    
+    if (!game) return;
+    
+    const gameState = game.gameState as any;
+    const remainingDeck = gameState.deck || [];
+    const currentHands = players.map(p => p.hand as Card[]);
+    
+    // Deal remaining 8 cards to each player
+    const finalHands = dealRemainingCards(remainingDeck, currentHands);
+    
+    for (let i = 0; i < players.length; i++) {
+      await storage.updatePlayer(players[i].id, {
+        hand: finalHands[i],
+      });
+    }
+    
+    // Find the highest bidder
+    const highestBidder = players.find(p => p.playerNumber === game.biddingPlayer);
+    
+    // For hidden trump variant, set trump card but keep it hidden
+    const trumpSuits = ["hearts", "diamonds", "clubs", "spades"];
+    const trumpSuit = trumpSuits[Math.floor(Math.random() * 4)];
+    
+    // Choose a random trump card from the suit
+    const trumpRanks = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
+    const trumpValues = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
+    const randomIndex = Math.floor(Math.random() * trumpRanks.length);
+    
+    const trumpCard = { 
+      suit: trumpSuit, 
+      rank: trumpRanks[randomIndex], 
+      value: trumpValues[randomIndex] 
+    };
+    
+    // Start playing phase with highest bidder leading
+    await storage.updateGame(gameId, {
+      phase: 'playing',
+      status: 'playing',
+      trumpSuit,
+      trumpCard,
+      trumpRevealed: game.variant === 'single_sar', // Only reveal for single sar
+      currentPlayer: game.biddingPlayer || 0,
+      gameState: {
+        ...gameState,
+        currentTrick: [],
+        tricksWon: [],
+        trumpCaller: game.biddingPlayer,
+        consecutiveWins: { A: 0, B: 0 },
+      },
+    });
+    
+    // Broadcast the update
+    const updatedGame = await storage.getGame(gameId);
+    const enrichedPlayers = await Promise.all(
+      players.map(async (player) => {
+        const user = player.userId ? await storage.getUser(player.userId) : null;
+        return {
+          ...player,
+          username: user?.username || `Player ${player.playerNumber + 1}`,
+        };
+      })
+    );
+    
+    broadcastToGame(gameId, {
+      type: 'game_update',
+      data: { game: updatedGame, players: enrichedPlayers },
+    });
   }
 
   return httpServer;
