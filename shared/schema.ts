@@ -12,7 +12,7 @@ export const users = pgTable("users", {
 export const games = pgTable("games", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   status: text("status").notNull().default("waiting"), // waiting, bidding, playing, completed
-  phase: text("phase").notNull().default("bidding"), // bidding, playing
+  phase: text("phase").notNull().default("bidding"), // bidding, trump_selection, playing
   variant: text("variant").notNull().default("single_sar"), // single_sar, double_sar, hidden_trump
   currentRound: integer("current_round").notNull().default(1),
   currentPlayer: integer("current_player").notNull().default(0),
@@ -65,7 +65,7 @@ export interface Card {
 }
 
 export interface GameMessage {
-  type: "join" | "bid" | "pass" | "play_card" | "reveal_trump" | "game_update" | "error";
+  type: "join" | "bid" | "pass" | "play_card" | "select_trump" | "reveal_trump" | "game_update" | "error";
   data: any;
   playerId?: string;
   gameId?: string;

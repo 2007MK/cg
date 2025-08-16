@@ -251,6 +251,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             break;
             
+          case 'select_trump':
+            if (connection) {
+              await handleSelectTrump(connection, message.data);
+            }
+            break;
+            
           case 'reveal_trump':
             if (connection) {
               await handleRevealTrump(connection);
@@ -671,6 +677,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     if (!game) return;
     
+    // Update game to trump selection phase - highest bidder chooses trump
+    await storage.updateGame(gameId, {
+      phase: "trump_selection",
+      currentPlayer: game.biddingPlayer || 0,
+      gameState: {
+        ...(game.gameState as any),
+        biddingComplete: true,
+        trumpSelectionRequired: true,
+      },
+    });
+    
+    // Broadcast update so highest bidder can select trump
+    const enrichedPlayers = await Promise.all(
+      players.map(async (player) => {
+        const user = player.userId ? await storage.getUser(player.userId) : null;
+        return {
+          ...player,
+          username: user?.username || `Player ${player.playerNumber + 1}`,
+        };
+      })
+    );
+    
+    const updatedGame = await storage.getGame(gameId);
+    broadcastToGame(gameId, {
+      type: 'game_update',
+      data: { game: updatedGame, players: enrichedPlayers },
+    });
+  }
+
+  async function completeGameSetup(gameId: string) {
+    const game = await storage.getGame(gameId);
+    const players = await storage.getPlayersByGame(gameId);
+    
+    if (!game) return;
+    
     const gameState = game.gameState as any;
     const remainingDeck = gameState.deck || [];
     const currentHands = players.map(p => p.hand as Card[]);
@@ -684,43 +725,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
     
-    // Find the highest bidder
-    const highestBidder = players.find(p => p.playerNumber === game.biddingPlayer);
-    
-    // For hidden trump variant, set trump card but keep it hidden
-    const trumpSuits = ["hearts", "diamonds", "clubs", "spades"];
-    const trumpSuit = trumpSuits[Math.floor(Math.random() * 4)];
-    
-    // Choose a random trump card from the suit
-    const trumpRanks = ["A", "K", "Q", "J", "10", "9", "8", "7", "6", "5", "4", "3", "2"];
-    const trumpValues = [14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2];
-    const randomIndex = Math.floor(Math.random() * trumpRanks.length);
-    
-    const trumpCard = { 
-      suit: trumpSuit, 
-      rank: trumpRanks[randomIndex], 
-      value: trumpValues[randomIndex] 
-    };
-    
-    // Start playing phase with highest bidder leading
+    // Start playing phase with highest bidder going first
     await storage.updateGame(gameId, {
-      phase: 'playing',
-      status: 'playing',
-      trumpSuit,
-      trumpCard,
-      trumpRevealed: game.variant === 'single_sar', // Only reveal for single sar
+      status: "playing",
+      phase: "playing",
       currentPlayer: game.biddingPlayer || 0,
       gameState: {
         ...gameState,
+        gameStarted: true,
         currentTrick: [],
         tricksWon: [],
-        trumpCaller: game.biddingPlayer,
+        pendingTricks: [],
         consecutiveWins: { A: 0, B: 0 },
       },
     });
     
-    // Broadcast the update
-    const updatedGame = await storage.getGame(gameId);
+    // Broadcast game start
     const enrichedPlayers = await Promise.all(
       players.map(async (player) => {
         const user = player.userId ? await storage.getUser(player.userId) : null;
@@ -731,10 +751,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       })
     );
     
+    const updatedGame = await storage.getGame(gameId);
     broadcastToGame(gameId, {
       type: 'game_update',
       data: { game: updatedGame, players: enrichedPlayers },
     });
+  }
+
+  async function handleSelectTrump(connection: GameConnection, trumpData: { suit: string; card: Card }) {
+    const game = await storage.getGame(connection.gameId);
+    const player = await storage.getPlayer(connection.playerId);
+    
+    if (!game || !player || game.phase !== 'trump_selection') return;
+    
+    // Validate it's the highest bidder selecting trump
+    if (game.biddingPlayer !== player.playerNumber) {
+      connection.ws.send(JSON.stringify({
+        type: 'error',
+        data: { message: 'Only the highest bidder can select trump' },
+      }));
+      return;
+    }
+    
+    // Set trump suit and trump card (face down)
+    await storage.updateGame(connection.gameId, {
+      trumpSuit: trumpData.suit as any,
+      trumpCard: trumpData.card,
+      gameState: {
+        ...(game.gameState as any),
+        trumpSelectionRequired: false,
+        trumpSelected: true,
+      },
+    });
+    
+    // Complete game setup - deal remaining cards and start playing
+    await completeGameSetup(connection.gameId);
   }
 
   return httpServer;

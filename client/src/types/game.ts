@@ -23,7 +23,7 @@ export type GameVariant = "single_sar" | "double_sar" | "hidden_trump";
 export interface Game {
   id: string;
   status: "waiting" | "bidding" | "playing" | "completed";
-  phase: "bidding" | "playing";
+  phase: "bidding" | "trump_selection" | "playing";
   variant: GameVariant;
   currentRound: number;
   currentPlayer: number;
@@ -37,7 +37,7 @@ export interface Game {
 }
 
 export interface GameMessage {
-  type: "join" | "bid" | "pass" | "play_card" | "reveal_trump" | "game_update" | "error";
+  type: "join" | "bid" | "pass" | "play_card" | "select_trump" | "reveal_trump" | "game_update" | "error";
   data: any;
   playerId?: string;
   gameId?: string;

@@ -1,4 +1,9 @@
 [x] 1. Install the required packages
 [x] 2. Restart the workflow to see if the project is working
-[ ] 3. Verify the project is working using the feedback tool
-[ ] 4. Inform user the import is completed and they can start building, mark the import as completed using the complete_project_import tool
+[x] 3. Analyze bidding system issues and fix turn management
+[x] 4. Implement proper trump selection phase and interface
+[x] 5. Update schema and message types for trump selection
+[x] 6. Create TrumpSelectionPanel component for user interface
+[ ] 7. Test the complete bidding to trump selection flow
+[ ] 8. Verify the project is working using the feedback tool
+[ ] 9. Inform user the import is completed and fixes are ready

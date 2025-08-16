@@ -5,6 +5,7 @@ import { useWebSocket } from '@/hooks/useWebSocket';
 import { GameHeader } from '@/components/game/GameHeader';
 import { GameTable } from '@/components/game/GameTable';
 import { BiddingPanel } from '@/components/game/BiddingPanel';
+import { TrumpSelectionPanel } from '@/components/game/TrumpSelectionPanel';
 import { TeamScores } from '@/components/game/TeamScores';
 import { GameActions } from '@/components/game/GameActions';
 import { Button } from '@/components/ui/button';
@@ -105,6 +106,15 @@ function GameContent() {
     });
   };
 
+  const handleSelectTrump = (suit: string, card: CardType) => {
+    sendMessage({
+      type: 'select_trump',
+      data: { suit, card },
+      playerId: playerId || undefined,
+      gameId: gameId || undefined,
+    });
+  };
+
   const handleRevealTrump = () => {
     sendMessage({
       type: 'reveal_trump',
@@ -181,11 +191,20 @@ function GameContent() {
           <GameTable onCardPlay={handleCardPlay} />
           
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <BiddingPanel
-              onBid={handleBid}
-              onPass={handlePass}
-              isMyTurn={isMyTurn}
-            />
+            {game.phase === 'bidding' && (
+              <BiddingPanel
+                onBid={handleBid}
+                onPass={handlePass}
+                isMyTurn={isMyTurn}
+              />
+            )}
+            
+            {game.phase === 'trump_selection' && (
+              <TrumpSelectionPanel
+                onSelectTrump={handleSelectTrump}
+                isMyTurn={isMyTurn}
+              />
+            )}
             
             <TeamScores players={players} />
             
