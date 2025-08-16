@@ -288,7 +288,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Check if all 4 players are present and bidding has started
     const bidGameState = game.gameState as any;
-    if (players.length !== 4 || !gameState?.biddingStarted) {
+    if (players.length !== 4 || !bidGameState?.biddingStarted) {
       connection.ws.send(JSON.stringify({
         type: 'error',
         data: { message: 'Waiting for all players to join before bidding can begin' },
