@@ -6,6 +6,7 @@ import { GameHeader } from '@/components/game/GameHeader';
 import { GameTable } from '@/components/game/GameTable';
 import { BiddingPanel } from '@/components/game/BiddingPanel';
 import { TrumpSelectionPanel } from '@/components/game/TrumpSelectionPanel';
+import { PlayerHand } from '@/components/game/PlayerHand';
 import { TeamScores } from '@/components/game/TeamScores';
 import { GameActions } from '@/components/game/GameActions';
 import { Button } from '@/components/ui/button';
@@ -204,6 +205,10 @@ function GameContent() {
                 onSelectTrump={handleSelectTrump}
                 isMyTurn={isMyTurn}
               />
+            )}
+            
+            {game.phase === 'playing' && (
+              <PlayerHand onCardPlay={handleCardPlay} />
             )}
             
             <TeamScores players={players} />

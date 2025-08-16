@@ -110,7 +110,10 @@ export function TrumpSelectionPanel({ onSelectTrump, isMyTurn }: TrumpSelectionP
         )}
         
         <div className="text-xs text-gray-400 text-center">
-          Trump card will be placed face down
+          {game?.variant === 'single_sar' 
+            ? 'Trump will be revealed immediately (Open Trump)'
+            : 'Trump card will be placed face down'
+          }
         </div>
       </div>
     </div>

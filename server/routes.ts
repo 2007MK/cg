@@ -773,10 +773,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return;
     }
     
-    // Set trump suit and trump card (face down)
+    // Set trump suit and trump card
+    const trumpRevealed = game.variant === 'single_sar'; // Open trump for Single Sar
     await storage.updateGame(connection.gameId, {
       trumpSuit: trumpData.suit as any,
       trumpCard: trumpData.card,
+      trumpRevealed,
       gameState: {
         ...(game.gameState as any),
         trumpSelectionRequired: false,
