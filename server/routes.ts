@@ -92,6 +92,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await initializeGame(gameId);
       }
       
+      // Broadcast player joined to all existing players in the game
+      const allPlayers = await storage.getPlayersByGame(gameId);
+      const enrichedPlayers = await Promise.all(
+        allPlayers.map(async (p) => {
+          const user = p.userId ? await storage.getUser(p.userId) : null;
+          return {
+            ...p,
+            username: user?.username || `Player ${p.playerNumber + 1}`,
+          };
+        })
+      );
+      
+      broadcastToGame(gameId, {
+        type: 'game_update',
+        data: { game, players: enrichedPlayers },
+      });
+      
       res.json({ player, game });
     } catch (error) {
       res.status(500).json({ error: "Failed to join game" });
@@ -119,6 +136,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const deck = shuffleDeck(createDeck());
     const players = await storage.getPlayersByGame(gameId);
     
+    // Only initialize if we have exactly 4 players
+    if (players.length !== 4) return;
+    
     // Deal initial 5 cards to each player
     const initialHands = dealCards(deck);
     
@@ -128,11 +148,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
     
-    // Update game state
+    // Determine first bidder (random for now, could be based on toss later)
+    const firstBidder = Math.floor(Math.random() * 4);
+    
+    // Update game state to start bidding
     await storage.updateGame(gameId, {
       status: "bidding",
       phase: "bidding",
-      gameState: { deck: deck.slice(20), initialHands }, // Save remaining deck
+      currentPlayer: firstBidder,
+      gameState: { 
+        deck: deck.slice(20), 
+        initialHands,
+        biddingHistory: [],
+        biddingStarted: true
+      },
+    });
+    
+    // Broadcast game start to all players
+    const game = await storage.getGame(gameId);
+    const enrichedPlayers = await Promise.all(
+      players.map(async (p) => {
+        const user = p.userId ? await storage.getUser(p.userId) : null;
+        return {
+          ...p,
+          username: user?.username || `Player ${p.playerNumber + 1}`,
+        };
+      })
+    );
+    
+    broadcastToGame(gameId, {
+      type: 'game_update',
+      data: { game, players: enrichedPlayers },
     });
   }
   
@@ -240,6 +286,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     if (!game || !player || game.phase !== 'bidding') return;
     
+    // Check if all 4 players are present and bidding has started
+    if (players.length !== 4 || !game.gameState?.biddingStarted) {
+      connection.ws.send(JSON.stringify({
+        type: 'error',
+        data: { message: 'Waiting for all players to join before bidding can begin' },
+      }));
+      return;
+    }
+    
     // Validate bid - minimum 9, maximum 13, must be higher than current highest
     const currentHighest = game.highestBid || 8;
     if (bidData.amount < 9 || bidData.amount > 13 || bidData.amount <= currentHighest) {
@@ -281,22 +336,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     await storage.updateGame(connection.gameId, { gameState });
     
-    // Check if bidding should end (simplified: after 4 bids or 3 consecutive passes)
-    const updatedPlayers = await storage.getPlayersByGame(connection.gameId);
-    const playersWithBids = updatedPlayers.filter(p => p.bid && p.bid > 0);
-    
-    if (playersWithBids.length >= 4 || gameState.biddingHistory.length >= 8) {
-      // End bidding phase, deal remaining cards
-      await endBiddingPhase(connection.gameId);
-    }
-    
-    // Broadcast update with usernames
+    // Broadcast update with usernames after successful bid
     const updatedGame = await storage.getGame(connection.gameId);
-    const updatedGamePlayers = await storage.getPlayersByGame(connection.gameId);
-    
-    // Enrich players with usernames
     const enrichedPlayers = await Promise.all(
-      updatedGamePlayers.map(async (player) => {
+      players.map(async (player) => {
         const user = player.userId ? await storage.getUser(player.userId) : null;
         return {
           ...player,
@@ -543,8 +586,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   async function handlePass(connection: GameConnection) {
     const game = await storage.getGame(connection.gameId);
     const player = await storage.getPlayer(connection.playerId);
+    const players = await storage.getPlayersByGame(connection.gameId);
     
     if (!game || !player || game.phase !== 'bidding') return;
+    
+    // Check if all 4 players are present and bidding has started
+    if (players.length !== 4 || !game.gameState?.biddingStarted) {
+      connection.ws.send(JSON.stringify({
+        type: 'error',
+        data: { message: 'Waiting for all players to join before bidding can begin' },
+      }));
+      return;
+    }
     
     // Validate it's player's turn to bid
     if (game.currentPlayer !== player.playerNumber) {
@@ -570,34 +623,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       gameState,
     });
     
-    // Check if bidding should end (3 consecutive passes after at least one bid)
-    const recentHistory = gameState.biddingHistory.slice(-3);
-    const allRecentPasses = recentHistory.length === 3 && recentHistory.every((h: any) => h.action === 'pass');
-    const hasBids = gameState.biddingHistory.some((h: any) => h.action === 'bid');
+    // Check if bidding should end: one player has bid and other 3 have passed
+    const bidActions = gameState.biddingHistory.filter((h: any) => h.action === 'bid');
+    const passActions = gameState.biddingHistory.filter((h: any) => h.action === 'pass');
     
-    if (allRecentPasses && hasBids) {
-      // End bidding phase
-      await endBiddingPhase(connection.gameId);
-    } else {
-      // Broadcast update with usernames
-      const updatedGame = await storage.getGame(connection.gameId);
-      const players = await storage.getPlayersByGame(connection.gameId);
+    // Rule: If there's at least one bid and we have 3 consecutive passes after that bid
+    if (bidActions.length > 0) {
+      const lastBidIndex = gameState.biddingHistory.map((h: any, i: number) => h.action === 'bid' ? i : -1)
+        .filter((i: number) => i >= 0).pop();
       
-      const enrichedPlayers = await Promise.all(
-        players.map(async (player) => {
-          const user = player.userId ? await storage.getUser(player.userId) : null;
-          return {
-            ...player,
-            username: user?.username || `Player ${player.playerNumber + 1}`,
-          };
-        })
-      );
-      
-      broadcastToGame(connection.gameId, {
-        type: 'game_update',
-        data: { game: updatedGame, players: enrichedPlayers },
-      });
+      if (lastBidIndex !== undefined) {
+        const actionsAfterLastBid = gameState.biddingHistory.slice(lastBidIndex + 1);
+        const consecutivePasses = actionsAfterLastBid.every((h: any) => h.action === 'pass');
+        
+        // End bidding if we have 3 consecutive passes after the last bid
+        if (actionsAfterLastBid.length >= 3 && consecutivePasses) {
+          await endBiddingPhase(connection.gameId);
+          return;
+        }
+      }
     }
+    
+    // Broadcast update with usernames
+    const updatedGame = await storage.getGame(connection.gameId);
+    const enrichedPlayers = await Promise.all(
+      players.map(async (player) => {
+        const user = player.userId ? await storage.getUser(player.userId) : null;
+        return {
+          ...player,
+          username: user?.username || `Player ${player.playerNumber + 1}`,
+        };
+      })
+    );
+    
+    broadcastToGame(connection.gameId, {
+      type: 'game_update',
+      data: { game: updatedGame, players: enrichedPlayers },
+    });
   }
 
   async function endBiddingPhase(gameId: string) {
