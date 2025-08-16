@@ -139,6 +139,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Only initialize if we have exactly 4 players
     if (players.length !== 4) return;
     
+    // Sort players by playerNumber to ensure correct order
+    players.sort((a, b) => a.playerNumber - b.playerNumber);
+    
     // Deal initial 5 cards to each player
     const initialHands = dealCards(deck);
     
@@ -148,8 +151,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
     
-    // Determine first bidder (random for now, could be based on toss later)
-    const firstBidder = Math.floor(Math.random() * 4);
+    // Determine first bidder (start with player 0 for consistent testing)
+    const firstBidder = 0;
     
     // Update game state to start bidding
     await storage.updateGame(gameId, {
@@ -290,6 +293,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const player = await storage.getPlayer(connection.playerId);
     const players = await storage.getPlayersByGame(connection.gameId);
     
+    // Sort players by playerNumber to ensure correct order
+    players.sort((a, b) => a.playerNumber - b.playerNumber);
+    
     if (!game || !player || game.phase !== 'bidding') return;
     
     // Check if all 4 players are present and bidding has started
@@ -313,7 +319,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Debug: Log current player info
-    console.log(`Bid attempt - Current Player: ${game.currentPlayer}, Player Number: ${player.playerNumber}, Player ID: ${player.id}`);
+    console.log(`Bid attempt - Current Player: ${game.currentPlayer}, Player Number: ${player.playerNumber}, Player ID: ${player.id}, Players: ${players.map(p => `${p.playerNumber}:${p.id.slice(-4)}`).join(', ')}`);
     
     // Validate it's player's turn to bid
     if (game.currentPlayer !== player.playerNumber) {
@@ -596,6 +602,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const game = await storage.getGame(connection.gameId);
     const player = await storage.getPlayer(connection.playerId);
     const players = await storage.getPlayersByGame(connection.gameId);
+    
+    // Sort players by playerNumber to ensure correct order
+    players.sort((a, b) => a.playerNumber - b.playerNumber);
     
     if (!game || !player || game.phase !== 'bidding') return;
     

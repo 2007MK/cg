@@ -7,6 +7,9 @@
 [x] 7. Fixed Single Sar to use open trump (not hidden)
 [x] 8. Created PlayerHand component for card selection
 [x] 9. Added playing phase interface to game layout
-[ ] 10. Test the complete bidding to trump selection to playing flow
-[ ] 11. Verify the project is working and all issues resolved
-[ ] 12. Inform user the import is completed and fixes are ready
+[x] 10. Fixed player ordering and synchronization issues  
+[x] 11. Added player sorting to ensure consistent turn management
+[x] 12. Set first bidder to player 0 for consistent testing
+[ ] 13. Test the complete bidding to trump selection to playing flow
+[ ] 14. Verify the project is working and all issues resolved
+[ ] 15. Inform user the import is completed and fixes are ready
