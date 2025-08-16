@@ -40,6 +40,13 @@ export function BiddingPanel({ onBid, onPass, isMyTurn }: BiddingPanelProps) {
           </span>
         </div>
         
+        <div className="text-sm mb-2">
+          <span className="text-gray-400">Current Turn:</span>
+          <span className="text-yellow-400 font-semibold ml-2">
+            Player {(game?.currentPlayer ?? 0) + 1}
+          </span>
+        </div>
+        
         {isMyTurn ? (
           <>
             <div className="space-y-2">

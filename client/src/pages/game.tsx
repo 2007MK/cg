@@ -118,7 +118,15 @@ function GameContent() {
   
   // Log current state for debugging
   useEffect(() => {
-    console.log('Current game state:', { game, players, currentPlayer, isConnected });
+    console.log('Current game state:', { 
+      game, 
+      players, 
+      currentPlayer, 
+      isConnected,
+      gameCurrentPlayer: game?.currentPlayer,
+      myPlayerNumber: currentPlayer?.playerNumber,
+      isMyTurn: game?.currentPlayer === currentPlayer?.playerNumber
+    });
   }, [game, players, currentPlayer, isConnected]);
   
   if (!isConnected) {
