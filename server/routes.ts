@@ -84,7 +84,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         hand: [],
         bid: 0,
         tricks: 0,
-        isConnected: false,
+        isConnected: true,
       });
       
       // If this is the 4th player, start the game
@@ -287,7 +287,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!game || !player || game.phase !== 'bidding') return;
     
     // Check if all 4 players are present and bidding has started
-    if (players.length !== 4 || !game.gameState?.biddingStarted) {
+    const bidGameState = game.gameState as any;
+    if (players.length !== 4 || !gameState?.biddingStarted) {
       connection.ws.send(JSON.stringify({
         type: 'error',
         data: { message: 'Waiting for all players to join before bidding can begin' },
@@ -305,11 +306,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return;
     }
     
+    // Debug: Log current player info
+    console.log(`Bid attempt - Current Player: ${game.currentPlayer}, Player Number: ${player.playerNumber}, Player ID: ${player.id}`);
+    
     // Validate it's player's turn to bid
     if (game.currentPlayer !== player.playerNumber) {
       connection.ws.send(JSON.stringify({
         type: 'error',
-        data: { message: 'Not your turn to bid' },
+        data: { message: `Not your turn to bid. Current turn: Player ${game.currentPlayer + 1}, You are: Player ${player.playerNumber + 1}` },
       }));
       return;
     }
@@ -326,15 +330,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
     
     // Store bidding history
-    const gameState = game.gameState as any;
-    if (!gameState.biddingHistory) gameState.biddingHistory = [];
-    gameState.biddingHistory.push({
+    if (!bidGameState.biddingHistory) bidGameState.biddingHistory = [];
+    bidGameState.biddingHistory.push({
       player: player.playerNumber,
       bid: bidData.amount,
       action: 'bid',
     });
     
-    await storage.updateGame(connection.gameId, { gameState });
+    await storage.updateGame(connection.gameId, { gameState: bidGameState });
     
     // Broadcast update with usernames after successful bid
     const updatedGame = await storage.getGame(connection.gameId);
@@ -591,7 +594,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!game || !player || game.phase !== 'bidding') return;
     
     // Check if all 4 players are present and bidding has started
-    if (players.length !== 4 || !game.gameState?.biddingStarted) {
+    const passGameState = game.gameState as any;
+    if (players.length !== 4 || !passGameState?.biddingStarted) {
       connection.ws.send(JSON.stringify({
         type: 'error',
         data: { message: 'Waiting for all players to join before bidding can begin' },
@@ -609,9 +613,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Store pass in bidding history
-    const gameState = game.gameState as any;
-    if (!gameState.biddingHistory) gameState.biddingHistory = [];
-    gameState.biddingHistory.push({
+    if (!passGameState.biddingHistory) passGameState.biddingHistory = [];
+    passGameState.biddingHistory.push({
       player: player.playerNumber,
       action: 'pass',
     });
@@ -620,20 +623,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const nextPlayer = (game.currentPlayer + 1) % 4;
     await storage.updateGame(connection.gameId, {
       currentPlayer: nextPlayer,
-      gameState,
+      gameState: passGameState,
     });
     
     // Check if bidding should end: one player has bid and other 3 have passed
-    const bidActions = gameState.biddingHistory.filter((h: any) => h.action === 'bid');
-    const passActions = gameState.biddingHistory.filter((h: any) => h.action === 'pass');
+    const bidActions = passGameState.biddingHistory.filter((h: any) => h.action === 'bid');
+    const passActions = passGameState.biddingHistory.filter((h: any) => h.action === 'pass');
     
     // Rule: If there's at least one bid and we have 3 consecutive passes after that bid
     if (bidActions.length > 0) {
-      const lastBidIndex = gameState.biddingHistory.map((h: any, i: number) => h.action === 'bid' ? i : -1)
+      const lastBidIndex = passGameState.biddingHistory.map((h: any, i: number) => h.action === 'bid' ? i : -1)
         .filter((i: number) => i >= 0).pop();
       
       if (lastBidIndex !== undefined) {
-        const actionsAfterLastBid = gameState.biddingHistory.slice(lastBidIndex + 1);
+        const actionsAfterLastBid = passGameState.biddingHistory.slice(lastBidIndex + 1);
         const consecutivePasses = actionsAfterLastBid.every((h: any) => h.action === 'pass');
         
         // End bidding if we have 3 consecutive passes after the last bid

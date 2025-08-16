@@ -1,0 +1,97 @@
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=HWziptbCRJRT' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)Understand this error
+chunk-RPCDYKBN.js?v=578a06f3:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+lobby.tsx:93 Successfully joined game: Object
+lobby.tsx:94 Navigation URL: /game/a1867c7b-df54-4530-9aa6-b9b3f1ee97ba?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+useWebSocket.ts:30 Attempting WebSocket connection to: wss://98d6be90-583d-4164-aa3a-46fff2669e7c-00-137ak6xzisq3w.worf.replit.dev/ws
+useWebSocket.ts:31 With gameId: a1867c7b-df54-4530-9aa6-b9b3f1ee97ba playerId: 45c5cb07-d57c-4cd7-9653-0be27aa71920
+game.tsx:75 Connection status changed: false
+game.tsx:121 Current game state: Object
+useWebSocket.ts:39 WebSocket connected
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:75 Connection status changed: true
+game.tsx:121 Current game state: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+useWebSocket.ts:44 Sending join message to server
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:33 Processing game update: Object
+game.tsx:48 Found current user player: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:121 Current game state: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:33 Processing game update: Object
+game.tsx:48 Found current user player: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:121 Current game state: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:33 Processing game update: Object
+game.tsx:48 Found current user player: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:121 Current game state: Object
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:33 Processing game update: Object
+game.tsx:48 Found current user player: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:121 Current game state: Object
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:33 Processing game update: Object
+game.tsx:48 Found current user player: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:121 Current game state: Object
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:58 Game error received: Object
+(anonymous) @ game.tsx:58Understand this error
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:58 Game error received: Object
+(anonymous) @ game.tsx:58Understand this error
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+useWebSocket.ts:58 WebSocket message received: Object
+game.tsx:30 Received WebSocket message: Object
+game.tsx:58 Game error received: Object
+(anonymous) @ game.tsx:58Understand this error
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object
+game.tsx:25 Game page params: Object
+game.tsx:26 Window location search: ?playerId=45c5cb07-d57c-4cd7-9653-0be27aa71920&username=mk1
+game.tsx:27 All URL params: Object

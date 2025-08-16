@@ -104,7 +104,7 @@ export function PlayerArea({
             {' | '}
             <span>Tricks: {player.tricks || 0}</span>
           </div>
-          {!player.isConnected && (
+          {player.isConnected === false && (
             <div className="text-xs text-red-400">Disconnected</div>
           )}
         </div>
